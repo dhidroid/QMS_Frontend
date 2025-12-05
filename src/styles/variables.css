@@ -1,0 +1,47 @@
+:root {
+  /* Modern Medical/Tech Palette */
+  --color-primary: #007bff; /* Vibrant Blue */
+  --color-primary-dark: #0056b3;
+  --color-secondary: #00d2d3; /* Cyan/Teal */
+  --color-accent: #ff9f43; /* Orange for calls/alerts */
+  --color-success: #2eec71;
+  --color-danger: #ff6b6b;
+  --color-background: #f4f7f6;
+  --color-surface: #ffffff;
+  --color-text-main: #2d3436;
+  --color-text-muted: #636e72;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+
+  /* Typography */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--color-background);
+  color: var(--color-text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
