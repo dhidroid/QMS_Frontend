@@ -1,5 +1,5 @@
 // Use current hostname to allow mobile access on same network
-const API_BASE = `http://${window.location.hostname}:4000/api`;
+const API_BASE = `https://qms-backend-xsb5.onrender.com/api`;
 
 export async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
