@@ -2,9 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: var(--color-background);
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   color: var(--color-text-main);
-  overflow: hidden;
 }
 
 .header {
@@ -12,114 +11,42 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-md) var(--spacing-xl);
-  background: white;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-  z-index: 10;
+  background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--glass-shadow);
 }
 
 .logo {
-  font-size: 1.8rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+    font-weight: bold;
   color: var(--color-primary);
-  letter-spacing: -0.5px;
 }
 
 .time {
-  font-size: 1.5rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-muted);
+  font-size: 1.2rem;
+    font-weight: 500;
 }
 
 .main {
   flex: 1;
-  display: grid;
-  grid-template-columns: 350px 1fr; /* QR/Queue on left (or separate), Status big in middle */
-  grid-template-areas: "sidebar content";
-  padding: var(--spacing-lg);
-  gap: var(--spacing-lg);
-  background: radial-gradient(circle at top right, #eef2f3, #d9e4f5);
-}
-
-/* Let's try a different layout: Left = QR + Queue, Right = BIG Now Serving */
-.leftPanel {
-  grid-area: sidebar;
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    gap: var(--spacing-xl);
+    align-items: center;
+    justify-content: center;
 }
 
-.rightPanel {
-  grid-area: content;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-  height: 100%;
-}
+/* Pulse Animation */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
 
-.qrCard {
-  background: white;
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.05);
-  text-align: center;
-}
-
-.qrCard h2 {
-  font-size: 1.2rem;
-  margin-bottom: var(--spacing-sm);
-  color: var(--color-text-main);
-}
-
-.qrImage {
-  width: 100%;
-  max-width: 200px;
-  border-radius: var(--radius-md);
-  margin-top: var(--spacing-xs);
-  border: 4px solid var(--color-primary);
-}
-
-.statusCard {
-  background: white;
-  flex: 2; /* Take up more space */
-  border-radius: 30px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 20px 60px rgba(0, 123, 255, 0.15);
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.05);
-}
-
-.statusCard h3 {
-  font-size: 2rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: var(--spacing-md);
-}
-
-.tokenNumber {
-  font-size: 10rem; /* MASSIVE */
-  font-weight: 900;
-  line-height: 1;
-  color: var(--color-primary);
-  text-shadow: 4px 4px 0px rgba(0, 123, 255, 0.1);
-  margin: 0;
-  z-index: 2;
-}
-
-.counter {
-  font-size: 3rem;
-  font-weight: 700;
-  margin-top: var(--spacing-md);
-  color: var(--color-text-main);
-  background: var(--color-background);
-  padding: 10px 40px;
-  border-radius: 50px;
-  z-index: 2;
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
 }
 
 .animPulse {
@@ -127,86 +54,99 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(0,123,255,0.1) 0%, rgba(0,123,255,0) 70%);
+  width: 200px;
+  height: 200px;
+  border: 4px solid var(--color-success);
   border-radius: 50%;
   animation: pulse-ring 2s infinite;
-  z-index: 1;
+  pointer-events: none;
+  z-index: 0;
 }
 
-@keyframes pulse-ring {
-  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.8; }
-  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+.leftPanel,
+.rightPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  height: 100%;
+  justify-content: center;
+}
+
+.qrCard {
+  background: var(--color-surface);
+    padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  text-align: center;
+  display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.qrCard h2 {
+  margin-bottom: var(--spacing-xs);
+    color: var(--color-primary-dark);
+}
+
+.qrImage {
+  width: 100%;
+  max-width: 300px;
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-md);
+}
+
+.statusCard {
+  background: var(--color-primary);
+    color: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0, 123, 255, 0.3);
+}
+
+.tokenNumber {
+  font-size: 5rem;
+    font-weight: 800;
+    margin: var(--spacing-sm) 0;
+}
+
+.counter {
+  font-size: 1.5rem;
+    opacity: 0.9;
 }
 
 .queueList {
-  background: white;
-  flex: 1;
-  padding: var(--spacing-lg);
+  background: var(--glass-bg);
+    padding: var(--spacing-md);
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-}
-
-.queueList h3 {
-  font-size: 1.1rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: var(--spacing-md);
+  flex: 1;
+    overflow-y: auto;
 }
 
 .queueItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px 20px;
-  margin-bottom: 10px;
-  background: var(--color-background);
+  background: white;
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
   border-radius: var(--radius-md);
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-  border-left: 6px solid var(--color-secondary);
-}
-
-.queueItem:last-child {
-  margin-bottom: 0;
-}
-
-.empty {
-  text-align: center;
-  color: var(--color-text-muted);
-  font-style: italic;
-  padding: 20px;
+  font-size: 1.2rem;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .footer {
-  background: var(--color-primary);
+  padding: var(--spacing-md);
+  text-align: center;
+  background: var(--color-text-main);
   color: white;
-  padding: 15px;
-  overflow: hidden;
 }
 
 .announcement {
-  font-size: 1.5rem;
-  font-weight: 600;
-  white-space: nowrap;
-  animation: marquee 20s linear infinite;
+  font-size: 1.2rem;
+    animation: marquee 50s linear infinite;
 }
 
 @keyframes marquee {
   0% { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
-}
-
-@media (max-width: 900px) {
-  .main {
-    grid-template-columns: 1fr;
-    grid-template-areas: 
-      "content" 
-      "sidebar";
-  }
 }

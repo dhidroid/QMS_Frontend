@@ -3,49 +3,41 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f0f2f5;
+  background: #111;
   padding: 20px;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 .ticketCard {
-  background: #ffffff;
+  background: #EACB9F;
+    /* Vintage/Beige Ticket Color */
   width: 100%;
   max-width: 360px;
-  border-radius: 20px;
+  border-radius: 24px;
   position: relative;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
   color: #1a1a1a;
   overflow: hidden;
 }
 
-/* Add a visual "top bar" */
-.ticketCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 6px;
-  background: linear-gradient(90deg, #007bff, #00d2d3);
-}
 /* Header Section */
 .header {
-  padding: 24px 24px 10px;
+  padding: 24px 24px 20px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+    border-bottom: 2px solid #1a1a1a;
 }
 
 .brandIcon {
-  width: 40px;
-    height: 40px;
-    background: #f0f7ff;
-    border-radius: 12px;
+  width: 48px;
+    height: 48px;
+    background: #1a1a1a;
+    border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #007bff;
+  color: #EACB9F;
   font-size: 20px;
 }
 
@@ -55,100 +47,82 @@
 
 .label {
   display: block;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  font-weight: 700;
-    color: #999;
   letter-spacing: 0.5px;
-  margin-bottom: 2px;
+  color: rgba(26, 26, 26, 0.6);
+    margin-bottom: 4px;
 }
 
 .value {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: #333;
+  color: #1a1a1a;
 }
 
 /* Main Route / Token Number */
 .mainInfo {
-  padding: 20px 24px;
+  padding: 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .bigCode {
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 800;
   line-height: 1;
-  color: #007bff;
   letter-spacing: -1px;
 }
 
 .midIcon {
   font-size: 1.5rem;
-  color: #ccc;
+  color: rgba(26, 26, 26, 0.4);
 }
 
 .subText {
-  font-size: 0.8rem;
-    color: #888;
+  font-size: 0.75rem;
+    color: rgba(26, 26, 26, 0.6);
   margin-top: 4px;
-  font-weight: 500;
 }
 
-/* Divider with Dashed Line */
+/* Divider with Cutouts */
 .divider {
-  border-bottom: 2px dashed #eee;
-    margin: 10px 24px;
+  height: 2px;
+    background: #1a1a1a;
   position: relative;
+  margin: 0 24px;
 }
 
-.divider::before,
-.divider::after {
-  content: '';
-  position: absolute;
-  top: -10px;
-  width: 20px;
-  height: 20px;
-  background: #f0f2f5;
-  /* Match container bg */
-  border-radius: 50%;
-}
-
-.divider::before {
-  left: -34px;
-}
-
-/* Adjust based on margin/padding */
-.divider::after {
-  right: -34px;
-}
 /* Passenger / Details List */
 .detailsList {
-  padding: 20px 24px;
+  padding: 24px;
 }
 
 .detailRow {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: flex-end;
+    /* Align bottom to match image style */
   margin-bottom: 16px;
+  border-bottom: 1px solid rgba(26, 26, 26, 0.1);
+    padding-bottom: 8px;
 }
 
 .detailRow:last-child {
+  border-bottom: none;
   margin-bottom: 0;
 }
 
 .detailMain {
-  font-weight: 600;
-    font-size: 1rem;
-    color: #1a1a1a;
+  font-weight: 700;
+    font-size: 1.1rem;
 }
 
 .detailSub {
   font-size: 0.8rem;
-  color: #888;
+  color: rgba(26, 26, 26, 0.6);
   margin-top: 2px;
 }
 
@@ -158,42 +132,66 @@
 
 /* Barcode / QR Section */
 .qrSection {
-  padding: 0 24px 30px;
+  background: #EACB9F;
+    padding: 24px;
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+    border-top: 2px dashed #1a1a1a;
 }
 
+.qrSection::before,
+.qrSection::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  width: 24px;
+  height: 24px;
+  background: #111;
+  /* Match page bg */
+  border-radius: 50%;
+}
+
+.qrSection::before {
+  left: -12px;
+}
+
+.qrSection::after {
+  right: -12px;
+}
 .qrCode {
-  width: 140px;
-    height: 140px;
+  width: 100%;
+    height: auto;
+    max-width: 200px;
+    /* Limit width */
   display: block;
+  mix-blend-mode: multiply;
+    /* Make white bg transparentish */
 }
 
 /* Footer / Actions */
 .actions {
   text-align: center;
-  margin-bottom: 20px;
+  padding-top: 20px;
 }
 
 .downloadBtn {
-  background: #007bff;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 12px;
-    font-weight: 600;
+  background: transparent;
+    color: #EACB9F;
+    border: 1px solid #EACB9F;
+    padding: 10px 20px;
+    border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
   transition: all 0.2s;
 }
 
 .downloadBtn:hover {
-  background: #0056b3;
-    transform: translateY(-2px);
+  background: #EACB9F;
+    color: #111;
 }
 
 .loading, .error {
-  color: #333;
+  color: white;
   font-size: 1.2rem;
 }

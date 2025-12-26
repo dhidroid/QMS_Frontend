@@ -58,8 +58,8 @@ const DisplayPage = () => {
           if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(text);
             // slower speaking rate for clearer announcements
-           utterance.rate = 0.9;
-           utterance.pitch = 1.1;
+            utterance.rate = 0.9;
+            utterance.pitch = 1.1;
             window.speechSynthesis.cancel(); // Cancel current speaking
             window.speechSynthesis.speak(utterance);
           }
