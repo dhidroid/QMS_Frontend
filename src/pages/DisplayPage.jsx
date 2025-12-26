@@ -39,7 +39,7 @@ const DisplayPage = () => {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 3000); // 3 seconds poll
+    const interval = setInterval(fetchData, 2000); // 2 seconds poll
     return () => clearInterval(interval);
   }, []);
 

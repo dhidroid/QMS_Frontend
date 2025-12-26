@@ -10,8 +10,30 @@ const BookingPage = () => {
     mobile: '',
     purpose: '',
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Used for submission
+  const [checkingDefault, setCheckingDefault] = useState(true); // Initial load check
   const [error, setError] = useState('');
+
+  // Check for default form
+  React.useEffect(() => {
+    const checkDefault = async () => {
+      try {
+        const res = await api.forms.getDefault();
+        if (res.success && res.form && res.form.FormId) {
+          navigate(`/book/form/${res.form.FormId}`);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setCheckingDefault(false);
+      }
+    };
+    checkDefault();
+  }, []);
+
+  if (checkingDefault) {
+    return <div className={styles.container}><div className={styles.loader}>Loading...</div></div>;
+  }
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

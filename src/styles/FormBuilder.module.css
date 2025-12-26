@@ -1,0 +1,331 @@
+@import 'variables.css';
+
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary); /* #f0f4f8 */
+  color: #334155;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+.header {
+  height: 64px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 10;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.titleInput {
+  font-size: 1.25rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  outline: none;
+  background: transparent;
+  color: #0f172a;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.titleInput:hover, .titleInput:focus {
+    background: white;
+    border-color: #cbd5e1;
+}
+
+.headerRight {
+    display: flex;
+    gap: 12px;
+}
+
+.saveBtn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+  transition: all 0.2s;
+}
+.saveBtn:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3); }
+
+.modeBtn {
+    background: white;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.modeBtn:hover { background: #f8fafc; }
+.modeBtn.active {
+    background: #e0f2fe;
+    color: #0284c7;
+    border-color: #7dd3fc;
+}
+
+.closeBtn {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-weight: 500;
+    cursor: pointer;
+}
+.closeBtn:hover { color: #ef4444; }
+
+
+.builder {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 280px;
+  background: white;
+  border-right: 1px solid #e2e8f0;
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h3, .properties h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+}
+
+.toolsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.toolBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #475569;
+  gap: 8px;
+}
+.toolBtn:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+  color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.icon {
+  font-size: 1.5rem;
+}
+.toolLabel {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.canvas {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+  background-color: #f1f5f9;
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  background-size: 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+.previewCanvas {
+    background: white; /* Clean background for preview */
+}
+
+.emptyState {
+    text-align: center;
+    color: #94a3b8;
+    margin-top: 10vh;
+}
+.emptyIcon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+
+.fieldItem {
+  background: white;
+  width: 100%;
+  max-width: 640px;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.sectionItem {
+    background: transparent;
+    border-bottom: 2px solid #e2e8f0;
+    box-shadow: none;
+    padding: 32px 0 16px;
+    border-radius: 0;
+}
+.sectionTitle {
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin: 0;
+}
+
+.fieldItem.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.fieldItem:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.fieldControls {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    display: flex;
+    gap: 4px;
+    opacity: 0; /* Show on hover */
+    transition: opacity 0.2s;
+}
+.fieldItem:hover .fieldControls, .fieldItem.selected .fieldControls { opacity: 1; }
+
+.fieldControls button {
+    background: #f1f5f9;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.fieldControls button:hover { background: #e2e8f0; color: #1e293b; }
+.fieldControls .deleteBtn:hover { background: #fee2e2; color: #ef4444; }
+
+
+.fieldLabel {
+    display: block;
+    font-weight: 500;
+    color: #1e293b;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+.req { color: #ef4444; margin-left: 2px; }
+
+.previewInput {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 0.95rem;
+}
+.previewInput:disabled {
+    background: #f8fafc;
+    cursor: default;
+}
+
+.previewCheck {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+.previewCheck input { width: 18px; height: 18px; }
+
+/* Properties */
+.properties {
+  width: 320px;
+  background: white;
+  border-left: 1px solid #e2e8f0;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.formGroup { margin-bottom: 20px; }
+.formGroup label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #475569;
+}
+
+.formGroup input, .formGroup textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.formGroup input:focus, .formGroup textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.formCheck {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+.formCheck input { width: 18px; height: 18px; }
+.formCheck label { margin: 0; font-weight: 500; cursor: pointer; }
+
+.noProp {
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 60px;
+}
+
+.submitPreviewBtn {
+    margin-top: 24px;
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: default; /* In preview mode it does nothing */
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+}

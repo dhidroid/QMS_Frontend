@@ -16,7 +16,10 @@ export const api = {
     getDisplayStatus: () => request('/token/display-status'),
   },
   admin: {
-    getTokens: () => request('/admin/tokens'),
+    getTokens: (params) => {
+      const qs = params ? `?${new URLSearchParams(params).toString()}` : '';
+      return request(`/admin/tokens${qs}`);
+    },
     updateStatus: (data) => request('/handler/update-status', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -25,5 +28,21 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data || {})
     }),
+    createUser: (data) => request('/admin/create-user', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    getUsers: () => request('/admin/users'),
+    getPushSubs: () => request('/admin/push-subs'),
+  },
+  forms: {
+    save: (data) => request('/forms/save', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    list: () => request('/forms'),
+    get: (id) => request(`/forms/${id}`),
+    getDefault: () => request('/forms/default'),
+    delete: (id) => request(`/forms/${id}`, 'DELETE')
   },
 };

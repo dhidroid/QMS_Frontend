@@ -6,6 +6,8 @@ import BookingPage from './pages/BookingPage';
 import TicketPage from './pages/TicketPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboard from './pages/AdminDashboard';
+import FormBuilder from './pages/FormBuilder';
+import DynamicBookingPage from './pages/DynamicBookingPage';
 
 function App() {
   return (
@@ -17,6 +19,9 @@ function App() {
         <Route path="/ticket/:guid" element={<TicketPage />} />
         <Route path="/admin" element={<AdminLoginPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/forms" element={<FormBuilder />} />
+        <Route path="/admin/forms/:formId" element={<FormBuilder />} />
+        <Route path="/book/form/:formId" element={<DynamicBookingPage />} />
       </Routes>
     </Router>
   );
