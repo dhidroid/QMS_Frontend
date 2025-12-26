@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+# Thumbnails
+._*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
