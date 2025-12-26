@@ -63,13 +63,14 @@ const DisplayPage = () => {
         
         // Simple chime (optional, using browser oscillator if we wanted, but let's stick to TTS for now)
         // Speak
-        if ('speechSynthesis' in window) {
-           const utterance = new SpeechSynthesisUtterance(text);
-           utterance.rate = 0.9;
-           utterance.pitch = 1.1;
-           window.speechSynthesis.cancel(); // Cancel current speaking
-           window.speechSynthesis.speak(utterance);
-        }
+          if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            // slower speaking rate for clearer announcements
+            utterance.rate = 0.3;
+            utterance.pitch = 2.0;
+            window.speechSynthesis.cancel(); // Cancel current speaking
+            window.speechSynthesis.speak(utterance);
+          }
 
         // Save to avoid repeating loop
         localStorage.setItem('last_announced_token', nowServing.TokenGuid);
