@@ -13,6 +13,7 @@ export const api = {
       body: JSON.stringify(data),
     }),
     getByGuid: (guid) => request(`/token/by-guid/${guid}`),
+    getDisplayStatus: () => request('/token/display-status'),
   },
   admin: {
     getTokens: () => request('/admin/tokens'),

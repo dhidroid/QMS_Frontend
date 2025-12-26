@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
+import { api } from '../api/endpoints';
 import styles from '../styles/DisplayPage.module.css';
 
 const DisplayPage = () => {
@@ -26,16 +27,7 @@ const DisplayPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // We reuse the admin endpoint or create a public one. 
-        // Admin endpoint requires auth, so we might need a public 'display' endpoint.
-        // For now, let's try the admin one but we need a token? 
-        // Actually, display should be public. Let's assume we create a public endpoint or use a specific one.
-        // Since we don't have a public endpoint, let's use the admin one but handle auth? 
-        // BETTER APPROACH: Create a public endpoint in index.js or token.js for display board.
-        
-        // Temporarily using a new public endpoint we will create: /api/token/display-status
-        const res = await fetch(`http://${window.location.hostname}:4000/api/token/display-status`);
-        const data = await res.json();
+        const data = await api.token.getDisplayStatus();
         
         if (data.success) {
            setNowServing(data.nowServing || null);

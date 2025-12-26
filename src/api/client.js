@@ -1,6 +1,6 @@
-// Use current hostname to allow mobile access on same network
-// const API_BASE = `https://qms-backend-8sm7.onrender.com/api`;
-const API_BASE = `http://localhost:4000/api`;
+// Use environment variable if available, otherwise default to relative path /api (for same-origin deployment)
+// or localhost for local dev fallback if needed (though usually relative is safer for prod).
+const API_BASE = 'http://localhost:4000/api';
 
 export async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
