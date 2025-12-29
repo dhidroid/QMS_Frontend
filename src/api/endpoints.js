@@ -43,6 +43,6 @@ export const api = {
     list: () => request('/forms'),
     get: (id) => request(`/forms/${id}`),
     getDefault: () => request('/forms/default'),
-    delete: (id) => request(`/forms/${id}`, 'DELETE')
+    delete: (id) => request(`/forms/${id}`, { method: 'DELETE' })
   },
 };
