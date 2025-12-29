@@ -1,35 +1,57 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../api/endpoints';
-import styles from '../styles/AdminDashboard.module.css';
-import { FaClipboardList, FaWpforms, FaUsers, FaDesktop, FaMobileAlt, FaCog, FaTrash, FaLink, FaEdit, FaEye } from 'react-icons/fa';
+import DashboardShell from '../design-system/layout/DashboardShell';
+import DetailDrawer from '../design-system/organisms/DetailDrawer';
 import Toast from '../components/Toast';
-import ConfirmModal from '../components/ConfirmModal';
+import Button from '../design-system/atoms/Button';
+import Badge from '../design-system/atoms/Badge';
+import { jsPDF } from "jspdf";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper
+} from '@mui/material';
+import { Download, Printer } from 'lucide-react';
+
+// Sub-components
+import DashboardOverview from './admin-components/DashboardOverview';
+import TokenQueueTable from './admin-components/TokenQueueTable';
+import UserManagementTable from './admin-components/UserManagementTable';
+import FormListTable from './admin-components/FormListTable';
+import AdminTicketList from './admin-components/AdminTicketList';
+import AnalyticsDashboard from './admin-components/AnalyticsDashboard';
+import ProfilePage from './ProfilePage';
 
 const AdminDashboard = () => {
+  // --- State Management ---
   const [tokens, setTokens] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState('dashboard'); // dashboard | tokens | settings | users | forms | tokensFull
   const [counterName, setCounterName] = useState(localStorage.getItem('qms_counter') || 'Counter 1');
-  const [view, setView] = useState('dashboard'); // dashboard | tokens | settings | users
+  const [selectedToken, setSelectedToken] = useState(null); // For Drawer
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [query, setQuery] = useState('');
 
-  // Settings state
+  // Settings / Admin Data
   const [pushSubs, setPushSubs] = useState([]);
   const [newUser, setNewUser] = useState({ username: '', password: '', role: 'handler', displayName: '' });
+  const [users, setUsers] = useState([]);
+  const [forms, setForms] = useState([]);
 
   // UI State
-  const [toast, setToast] = useState(null); // { message, type }
-  const [deleteModal, setDeleteModal] = useState({ isOpen: false, formId: null, title: '' });
+  const [toast, setToast] = useState(null);
 
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
-  };
+  // --- Actions ---
+  const showToast = (message, type = 'success') => setToast({ message, type });
 
   const fetchTokens = async () => {
-    // ... same as before
     try {
       const res = await api.admin.getTokens();
-      if (res.tokens) {
-        setTokens(res.tokens);
-      }
+      if (res.tokens) setTokens(res.tokens);
     } catch (err) {
       console.error('Failed to fetch tokens', err);
     } finally {
@@ -37,82 +59,16 @@ const AdminDashboard = () => {
     }
   };
 
-  useEffect(() => {
-    fetchTokens();
-    const interval = setInterval(fetchTokens, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Save counter preference
-  useEffect(() => {
-    localStorage.setItem('qms_counter', counterName);
-  }, [counterName]);
-
-  const handleStatusUpdate = async (tokenGuid, status) => {
+  const fetchUsers = async () => {
     try {
-      await api.admin.updateStatus({ tokenGuid, status });
-      fetchTokens();
-    } catch (err) {
-      showToast('Failed to update status', 'error');
-    }
-  };
-
-  const handleCallNext = async () => {
-    try {
-      const res = await api.admin.callNext({ counterName });
-      if (res.success) {
-        fetchTokens();
-        // optionally play a sound here
-      } else {
-        showToast(res.message || 'Failed to call next token', 'error');
+      const res = await api.admin.getUsers();
+      if (res && res.users) {
+        setUsers(res.users);
       }
-    } catch (err) {
-      showToast('Error calling next token', 'error');
+    } catch (e) {
+      console.error('Failed to fetch users', e);
     }
   };
-
-  const stats = useMemo(() => {
-    const total = tokens.length;
-    const pending = tokens.filter(t => (t.Status || '').toLowerCase() === 'pending').length;
-    const called = tokens.filter(t => (t.Status || '').toLowerCase() === 'called').length;
-    const served = tokens.filter(t => (t.Status || '').toLowerCase() === 'served' || (t.Status || '').toLowerCase() === 'completed').length;
-    return { total, pending, called, served };
-  }, [tokens]);
-
-  const [query, setQuery] = useState('');
-  const filteredTokens = useMemo(() => {
-    if (!query) return tokens;
-    const q = query.toLowerCase();
-    return tokens.filter(t => (t.FullName || '').toLowerCase().includes(q) || String(t.TokenNumber).includes(q));
-  }, [tokens, query]);
-
-  const fetchPushSubs = async () => {
-    try {
-      const res = await api.admin.getPushSubs();
-      if (res && res.subs) setPushSubs(res.subs);
-    } catch (err) {
-      console.error('Failed to load push subscriptions', err);
-    }
-  };
-
-  const handleCreateUser = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.admin.createUser(newUser);
-      if (res && res.success) {
-        showToast('User created', 'success');
-        setNewUser({ username: '', password: '', role: 'handler', displayName: '' });
-        fetchUsers(); // Refresh users list after creation
-      }
-    } catch (err) {
-      showToast('Failed to create user', 'error');
-    }
-  };
-
-  const [users, setUsers] = useState([]);
-  const [forms, setForms] = useState([]);
-
-  const fetchUsers = async () => { /* ... */ }; // simplified for brevity in replace, keep existing
 
   const fetchForms = async () => {
     try {
@@ -123,343 +79,360 @@ const AdminDashboard = () => {
     }
   };
 
-  useEffect(() => {
-    if (view === 'users') fetchUsers();
-    if (view === 'forms') fetchForms();
-  }, [view]);
+  const fetchPushSubs = async () => {
+    try {
+      const res = await api.admin.getPushSubs();
+      if (res && res.subs) setPushSubs(res.subs);
+    } catch (err) {
+      console.error('Failed to load push subscriptions', err);
+    }
+  };
 
-  // Main Polling - Reduced to 2s
+  // --- Effects ---
   useEffect(() => {
     fetchTokens();
     const interval = setInterval(fetchTokens, 2000);
     return () => clearInterval(interval);
   }, []);
 
-  return (
-    <div className={styles.container}>
-      {/* ... header ... */}
-      <header className={styles.header}>
-        <div className={styles.logoGroup}>
-             <h1>Queue Management</h1>
-             <div className={styles.counterConfig}>
-                <label>My Counter:</label>
-                <select value={counterName} onChange={(e) => setCounterName(e.target.value)} className={styles.counterSelect}>
-                    <option value="Counter 1">Counter 1</option>
-                    <option value="Counter 2">Counter 2</option>
-                    <option value="Counter 3">Counter 3</option>
-                    <option value="Counter 4">Counter 4</option>
-                    <option value="Reception">Reception</option>
-                </select>
-             </div>
-        </div>
-        
-        <button onClick={() => {
-          localStorage.removeItem('authToken');
-          window.location.href = '/admin';
-        }}>Logout</button>
-      </header>
+  useEffect(() => {
+    localStorage.setItem('qms_counter', counterName);
+  }, [counterName]);
 
-      <main className={styles.main}>
-        {loading ? (
-          <div className={styles.loader}>Loading Data...</div>
-        ) : (
-            <div className={styles.dashboardGrid}>
-              <aside className={styles.sidebar}>
-                <div className={styles.sideBrand}>
-                  <h2>QMS Admin</h2>
+  useEffect(() => {
+    if (view === 'users') fetchUsers();
+    if (view === 'forms') fetchForms();
+    if (view === 'settings') fetchPushSubs();
+  }, [view]);
+
+  // --- Handlers ---
+  const handleStatusUpdate = async (tokenGuid, status, rowCounterName) => {
+    try {
+      // Use passed counter name if available (from row action), otherwise default to current dashboard counter
+      const finalCounter = rowCounterName || counterName;
+      await api.admin.updateStatus({ tokenGuid, status, counterName: finalCounter });
+      fetchTokens();
+      if (selectedToken && selectedToken.TokenGuid === tokenGuid) {
+        // Update selected token in drawer without closing if possible
+        setSelectedToken(prev => ({ ...prev, Status: status }));
+      }
+    } catch (err) {
+      showToast('Failed to update status', 'error');
+    }
+  };
+
+  const handleCallNext = async () => {
+    try {
+      const res = await api.admin.callNext({ counterName });
+      if (res.success) {
+        fetchTokens();
+        showToast(`Called token ${res.tokenNumber} → ${counterName}`, 'success');
+      } else {
+        showToast(res.message || 'No pending tokens', 'error');
+      }
+    } catch (err) {
+      showToast('Error calling next token', 'error');
+    }
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.admin.createUser(newUser);
+      if (res && res.success) {
+        showToast('User created', 'success');
+        setNewUser({ username: '', password: '', role: 'handler', displayName: '' });
+        fetchUsers();
+      }
+    } catch (err) {
+      showToast('Failed to create user', 'error');
+    }
+  };
+
+  const handleDeleteForm = async (formId) => {
+    try {
+      await api.forms.delete(formId);
+      showToast('Form deleted', 'success');
+      fetchForms();
+    } catch (e) {
+      showToast('Failed to delete form', 'error');
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!tokens.length) return showToast('No data to export', 'error');
+
+    // Create CSV header & rows
+    const headers = ['Token #', 'Name', 'Phone', 'Service', 'Counter', 'Status', 'Date', 'Time'];
+    const rows = tokens.map(t => [
+      t.TokenNumber,
+      `"${t.FullName}"`,
+      t.Mobile,
+      `"${t.Purpose}"`,
+      t.CounterName || '',
+      t.Status,
+      new Date(t.CreatedDate).toLocaleDateString(),
+      new Date(t.CreatedDate).toLocaleTimeString()
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + headers.join(",") + "\n"
+      + rows.map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `qms_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleGeneratePDF = () => {
+    if (!selectedToken) return;
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: [80, 160]
+    });
+
+    const centerX = 40;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text(`Token #${selectedToken.TokenNumber}`, centerX, 20, { align: "center" });
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(new Date().toLocaleDateString(), centerX, 28, { align: "center" });
+
+    doc.setLineWidth(0.5);
+    doc.line(10, 35, 70, 35);
+
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(selectedToken.FullName || "Guest", centerX, 45, { align: "center" });
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(selectedToken.Purpose || "General Service", centerX, 52, { align: "center" });
+    doc.text(`Mobile: ${selectedToken.Mobile || '-'}`, centerX, 58, { align: "center" });
+
+    doc.text("--------------------------------", centerX, 70, { align: "center" });
+    doc.text("Thank you for visiting!", centerX, 80, { align: "center" });
+
+    doc.save(`Token_${selectedToken.TokenNumber}.pdf`);
+  };
+
+  // --- Computed ---
+  const stats = useMemo(() => {
+    const total = tokens.length;
+    const pending = tokens.filter(t => (t.Status || '').toLowerCase() === 'pending').length;
+    const called = tokens.filter(t => (t.Status || '').toLowerCase() === 'called').length;
+    const served = tokens.filter(t => ['served', 'completed'].includes((t.Status || '').toLowerCase())).length;
+    return { total, pending, called, served };
+  }, [tokens]);
+
+  const viewTitle = {
+    dashboard: 'Dashboard Overview',
+    tokens: 'Live Token Queue',
+    tokensFull: 'All Tokens History',
+    analytics: 'Analytics & Insights',
+    'token-today': "Today's Token Analytics",
+    'token-week': "Weekly Token Report",
+    'token-month': "Monthly Token Overview",
+    users: 'User Management',
+    forms: 'Booking Forms',
+    settings: 'System Settings',
+    profile: 'My Profile',
+  }[view] || 'Admin Dashboard';
+
+  // --- Render ---
+  const renderContent = () => {
+    switch (view) {
+      case 'dashboard':
+        return <DashboardOverview stats={stats} setView={setView} onCallNext={handleCallNext} query={query} setQuery={setQuery} />;
+      case 'tokens':
+        return <TokenQueueTable
+          tokens={tokens}
+          query={query}
+          setQuery={setQuery}
+          onStatusUpdate={handleStatusUpdate}
+          onViewDetails={(token) => { setSelectedToken(token); setDrawerOpen(true); }}
+          counterName={counterName}
+          onExport={handleExportCSV}
+        />;
+      case 'tokensFull':
+        return <AdminTicketList onViewDetails={(token) => { setSelectedToken(token); setDrawerOpen(true); }} />;
+      case 'users':
+        return <UserManagementTable users={users} />;
+      case 'analytics':
+      case 'token-today':
+        return <AnalyticsDashboard range="today" />;
+      case 'token-week':
+        return <AnalyticsDashboard range="week" />;
+      case 'token-month':
+        return <AnalyticsDashboard range="month" />;
+      case 'forms':
+        return <FormListTable forms={forms} onDelete={handleDeleteForm} onToast={showToast} />;
+      case 'profile':
+        return <ProfilePage />;
+      case 'settings':
+        return (
+          <div className="grid gap-6 max-w-2xl">
+            <div className="bg-white p-6 rounded-xl border shadow-sm">
+              <h3 className="font-semibold mb-4">Create New User</h3>
+              <form onSubmit={handleCreateUser} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <input className="border p-2 rounded" placeholder="Username" value={newUser.username} onChange={e => setNewUser({ ...newUser, username: e.target.value })} />
+                  <input className="border p-2 rounded" placeholder="Display Name" value={newUser.displayName} onChange={e => setNewUser({ ...newUser, displayName: e.target.value })} />
+                  <input className="border p-2 rounded" placeholder="Password" type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} />
+                  <select className="border p-2 rounded" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
+                    <option value="handler">Handler</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </div>
-                <nav className={styles.nav}>
-                  <button className={`${styles.navBtn} ${view === 'dashboard' ? styles.navBtnActive : ''} `} onClick={() => setView('dashboard')}>Dashboard</button>
-                  <button className={`${styles.navBtn} ${view === 'tokens' ? styles.navBtnActive : ''} `} onClick={() => setView('tokens')}>Tokens</button>
-                  <button className={`${styles.navBtn} ${view === 'users' ? styles.navBtnActive : ''}`} onClick={() => setView('users')}>Users</button> {/* Added Users Tab */}
-                  <button className={`${styles.navBtn} ${view === 'forms' ? styles.navBtnActive : ''}`} onClick={() => setView('forms')}>Form Builder</button>
-                  <button className={`${styles.navBtn} ${view === 'settings' ? styles.navBtnActive : ''}`} onClick={() => { setView('settings'); fetchPushSubs(); }}>Settings</button>
-                </nav>
-                <div className={styles.sideFooter}>
-                  <small>Signed in as Admin</small>
-                </div>
-              </aside>
-
-              <section className={styles.content}>
-                {(view === 'dashboard' || view === 'tokens') && (
-                  <div className={styles.topRow}>
-                    <div className={styles.statsRow}>
-                      <div className={styles.statCard}>
-                        <div className={styles.statLabel}>Total</div>
-                        <div className={styles.statValue}>{stats.total}</div>
-                      </div>
-                      <div className={styles.statCard}>
-                        <div className={styles.statLabel}>Pending</div>
-                        <div className={styles.statValue}>{stats.pending}</div>
-                      </div>
-                      <div className={styles.statCard}>
-                        <div className={styles.statLabel}>Called</div>
-                        <div className={styles.statValue}>{stats.called}</div>
-                      </div>
-                      <div className={styles.statCard}>
-                        <div className={styles.statLabel}>Served</div>
-                        <div className={styles.statValue}>{stats.served}</div>
-                      </div>
-                    </div>
-
-                    <div className={styles.controlsRow}>
-                      <input type="text" placeholder="Search name or number" value={query} onChange={e => setQuery(e.target.value)} className={styles.searchInput} />
-                      <button onClick={handleCallNext} className={styles.nextBtn}>📢 Call Next</button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Conditional content per view */}
-                {view === 'dashboard' && (
-                  <div className={styles.menuGrid}>
-                    <div className={styles.menuCard} onClick={() => setView('tokens')}>
-                      <div className={styles.menuIcon}>📋</div>
-                      <div className={styles.menuTitle}>Live Queue</div>
-                      <div className={styles.menuDesc}>Monitor and manage active tokens</div>
-                    </div>
-
-                    <div className={styles.menuCard} onClick={() => setView('forms')}>
-                      <div className={styles.menuIcon}>✨</div>
-                      <div className={styles.menuTitle}>Form Builder</div>
-                      <div className={styles.menuDesc}>Create & edit booking forms</div>
-                    </div>
-
-                    <div className={styles.menuCard} onClick={() => setView('users')}>
-                      <div className={styles.menuIcon}>👥</div>
-                      <div className={styles.menuTitle}>User Manager</div>
-                      <div className={styles.menuDesc}>Manage system admins & handlers</div>
-                    </div>
-
-                    <div className={styles.menuCard} onClick={() => window.open('/display', '_blank')}>
-                      <div className={styles.menuIcon}>🖥️</div>
-                      <div className={styles.menuTitle}>Display Screen</div>
-                      <div className={styles.menuDesc}>Launch the public display screen Active</div>
-                    </div>
-
-                    <div className={styles.menuCard} onClick={() => window.open('/book', '_blank')}>
-                      <div className={styles.menuIcon}>📱</div>
-                      <div className={styles.menuTitle}>Booking Page</div>
-                      <div className={styles.menuDesc}>Open the public booking interface</div>
-                    </div>
-
-                    <div className={styles.menuCard} onClick={() => setView('settings')}>
-                      <div className={styles.menuIcon}>⚙️</div>
-                      <div className={styles.menuTitle}>System Settings</div>
-                      <div className={styles.menuDesc}>Configure counters & subscriptions</div>
-                    </div>
-                  </div>
-                )}
-
-                {view === 'tokens' && (
-                  <div className={styles.tableWrap}>
-                    <table className={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>Name</th>
-                          <th style={{ width: '30%' }}>Details</th>
-                          <th>Counter</th>
-                          <th>Status</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredTokens.map(token => {
-                          const status = (token.Status || '').toLowerCase();
-                          let extraData = null;
-                          try { extraData = token.Extra ? JSON.parse(token.Extra) : null; } catch (e) { }
-
-                          return (
-                            <tr key={token.TokenGuid} className={styles.row}>
-                              <td>{token.TokenNumber}</td>
-                              <td>{token.FullName}</td>
-                              <td>
-                                <div>{token.Purpose}</div>
-                                {extraData && (
-                                  <div style={{ fontSize: '0.8em', color: '#666', marginTop: 4 }}>
-                                    {Object.entries(extraData).map(([k, v]) => (
-                                      <div key={k}><b>{k}:</b> {typeof v === 'object' ? JSON.stringify(v) : v}</div>
-                                    ))}
-                                  </div>
-                                )}
-                              </td>
-                              <td>{token.CounterName || '-'}</td>
-                              <td className={styles.statusCell}>{token.Status}</td>
-                              <td>
-                                {status === 'pending' && <button onClick={() => handleStatusUpdate(token.TokenGuid, 'called')} className={styles.smallBtn}>Call</button>}
-                                {status === 'called' && (
-                                  <>
-                                    <button onClick={() => handleStatusUpdate(token.TokenGuid, 'served')} className={styles.smallBtn}>Serve</button>
-                                    <button onClick={() => handleStatusUpdate(token.TokenGuid, 'noshow')} className={styles.smallBtnDanger}>No Show</button>
-                                  </>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {filteredTokens.length === 0 && <tr><td colSpan="6" style={{ textAlign: 'center', padding: 20 }}>No tokens found</td></tr>}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {view === 'users' && (
-                  <div className={styles.tableWrap}>
-                    <h3>System Users</h3>
-                    <table className={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>Username</th>
-                          <th>Role</th>
-                          <th>Display Name</th>
-                          <th>Active</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {users.map(u => (
-                          <tr key={u.UserId} className={styles.row}>
-                            <td>{u.UserId}</td>
-                            <td>{u.Username}</td>
-                            <td>{u.Role}</td>
-                            <td>{u.DisplayName || '-'}</td>
-                            <td>{u.IsActive ? 'Yes' : 'No'}</td>
-                          </tr>
-                        ))}
-                        {users.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center', padding: 20 }}>No users found</td></tr>}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {view === 'forms' && (
-                  <div className={styles.tableWrap}>
-                    <h3>Form Management</h3>
-                    <div style={{ marginBottom: 16 }}>
-                      <button onClick={() => window.location.href = '/admin/forms'} className={styles.addBtn}>+ Create New Form</button>
-                    </div>
-                    <table className={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>Title</th>
-                          <th>Status</th>
-                          <th>Created</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {forms.map(f => (
-                          <tr key={f.FormId} className={styles.row}>
-                            <td>{f.Title}</td>
-                            <td>{f.IsActive ? 'Active' : 'Inactive'}</td>
-                            <td>{new Date(f.CreatedAt).toLocaleDateString()}</td>
-                            <td>
-                              <button onClick={() => window.location.href = `/admin/forms/${f.FormId}`} className={styles.smallBtn} title="Edit"><FaEdit /> Edit</button>
-                              <button
-                                onClick={() => {
-                                  const url = `${window.location.origin}/book/form/${f.FormId}`;
-                                  navigator.clipboard.writeText(url);
-                                  showToast('Link Copied: ' + url, 'success');
-                                }}
-                                className={styles.smallBtn}
-                                style={{ marginLeft: 8, background: '#64748b' }}
-                                title="Copy Link"
-                              >
-                                <FaLink /> Link
-                              </button>
-                              <button
-                                onClick={() => window.open(`/book/form/${f.FormId}`, '_blank')}
-                                className={styles.smallBtn}
-                                style={{ marginLeft: 8, background: 'transparent', color: '#3b82f6', border: '1px solid #3b82f6' }}
-                                title="View"
-                              >
-                                <FaEye /> View
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setDeleteModal({
-                                    isOpen: true,
-                                    formId: f.FormId,
-                                    title: f.Title
-                                  });
-                                }}
-                                className={styles.smallBtnDanger}
-                                style={{ marginLeft: 8 }}
-                                title="Delete"
-                              >
-                                <FaTrash />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                        {forms.length === 0 && <tr><td colSpan="4" style={{ textAlign: 'center', padding: 20 }}>No forms created yet</td></tr>}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {view === 'settings' && (
-                  <div className={styles.tableWrap}>
-                    <h3>Admin Settings</h3>
-                    <form className={styles.settingsForm} onSubmit={handleCreateUser}>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <input placeholder="Username" value={newUser.username} onChange={e => setNewUser({ ...newUser, username: e.target.value })} />
-                        <input placeholder="Display Name" value={newUser.displayName} onChange={e => setNewUser({ ...newUser, displayName: e.target.value })} />
-                        <input placeholder="Password" type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} />
-                        <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
-                          <option value="handler">Handler</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                        <button type="submit" className={styles.smallBtn}>Create</button>
-                      </div>
-                    </form>
-
-                    <div style={{ marginTop: 16 }}>
-                      <h4>Push Subscriptions</h4>
-                      <button onClick={fetchPushSubs} className={styles.smallBtn}>Refresh</button>
-                      <div style={{ marginTop: 12 }}>
-                        {pushSubs.length === 0 ? <div style={{ color: '#666' }}>No subscriptions</div> : (
-                          <ul>
-                            {pushSubs.map(s => <li key={s.Id || s.SubscriptionId}>{s.Endpoint || s.SubscriptionEndpoint || JSON.stringify(s)}</li>)}
-                          </ul>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </section>
+                <Button type="submit">Create User</Button>
+              </form>
             </div>
+
+            <div className="bg-white p-6 rounded-xl border shadow-sm">
+              <h3 className="font-semibold mb-4">Push Subscriptions</h3>
+              <div className="text-sm text-muted-foreground">
+                {pushSubs.length} active subscriptions
+              </div>
+              <Button variant="outline" size="sm" onClick={fetchPushSubs} className="mt-2">Refresh List</Button>
+            </div>
+          </div>
+        );
+      default:
+        return <div>Unknown View</div>;
+    }
+  };
+
+  return (
+    <DashboardShell
+      title={viewTitle}
+      activeView={view}
+      onViewChange={setView}
+      actions={
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground hidden md:block">Counter:</span>
+          <select
+            value={counterName}
+            onChange={(e) => setCounterName(e.target.value)}
+            className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="Counter 1">Counter 1</option>
+            <option value="Counter 2">Counter 2</option>
+            <option value="Counter 3">Counter 3</option>
+            <option value="Reception">Reception</option>
+          </select>
+          <Button onClick={handleCallNext}>Call Next</Button>
+        </div>
+      }
+    >
+      {renderContent()}
+
+      {/* Detail Drawer */}
+      <DetailDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        title={selectedToken ? `Token #${selectedToken.TokenNumber}` : 'Details'}
+        actions={
+          selectedToken && (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => window.print()}>
+                <Printer size={16} className="mr-2" /> Print
+              </Button>
+              <Button size="sm" onClick={handleGeneratePDF}>
+                <Download size={16} className="mr-2" /> Download PDF
+              </Button>
+            </div>
+          )
+        }
+      >
+        {selectedToken ? (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm text-muted-foreground">Status</div>
+                <Badge className="mt-1 capitalize" variant={selectedToken.Status === 'served' ? 'success' : 'neutral'}>
+                  {selectedToken.Status}
+                </Badge>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground">Counter</div>
+                <div className="font-medium">{selectedToken.CounterName || '-'}</div>
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              <h4 className="font-semibold mb-2">Customer Info</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Name:</span>
+                  <div className="font-medium">{selectedToken.FullName}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Service:</span>
+                  <div className="font-medium">{selectedToken.Purpose}</div>
+                </div>
+              </div>
+            </div>
+
+            {selectedToken.Extra && (
+              <div className="border-t pt-4">
+                <h4 className="font-semibold mb-2">Additional Data</h4>
+                <TableContainer component={Paper} elevation={0} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell><strong>Field</strong></TableCell>
+                        <TableCell><strong>Value</strong></TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {(() => {
+                        try {
+                          const extra = JSON.parse(selectedToken.Extra);
+                          return Object.entries(extra).map(([key, value]) => (
+                            <TableRow key={key}>
+                              <TableCell component="th" scope="row" className="text-muted-foreground">
+                                {key}
+                              </TableCell>
+                              <TableCell>{value && typeof value === 'object' ? JSON.stringify(value) : String(value)}</TableCell>
+                            </TableRow>
+                          ));
+                        } catch (e) {
+                          return (
+                            <TableRow>
+                              <TableCell colSpan={2} className="text-red-500">Invalid Data Format</TableCell>
+                            </TableRow>
+                          );
+                        }
+                      })()}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </div>
+            )}
+
+            <div className="pt-4 flex gap-2">
+              <Button className="w-full" onClick={() => handleStatusUpdate(selectedToken.TokenGuid, 'served')}>Mark Served</Button>
+              <Button className="w-full" variant="destructive" onClick={() => handleStatusUpdate(selectedToken.TokenGuid, 'noshow')}>No Show</Button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center text-muted-foreground pt-10">Select a token to view details</div>
         )}
-      </main>
+      </DetailDrawer>
 
+      {/* Global Toast */}
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
-
-      <ConfirmModal
-        isOpen={deleteModal.isOpen}
-        title="Delete Form"
-        message={`Are you sure you want to delete "${deleteModal.title}"? This action cannot be undone.`}
-        confirmText="Delete Form"
-        confirmColor="danger"
-        onCancel={() => setDeleteModal({ ...deleteModal, isOpen: false })}
-        onConfirm={async () => {
-          try {
-            await api.forms.delete(deleteModal.formId);
-            showToast('Form deleted successfully', 'success');
-            fetchForms();
-          } catch (err) {
-            showToast('Failed to delete form', 'error');
-          } finally {
-            setDeleteModal({ ...deleteModal, isOpen: false });
-          }
-        }}
-      />
-    </div>
+    </DashboardShell>
   );
 };
 

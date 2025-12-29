@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { api } from '../api/endpoints';
-import styles from '../styles/DisplayPage.module.css';
+import NowServing from './display-components/NowServing';
+import QueueList from './display-components/QueueList';
+import { Scan } from 'lucide-react';
+import clsx from 'clsx';
+import Footer from '../components/Footer';
+import logo from '../assets/logo.svg';
 
 const DisplayPage = () => {
   const [qrUrl, setQrUrl] = useState('');
@@ -10,11 +15,12 @@ const DisplayPage = () => {
   // Real Data State
   const [nowServing, setNowServing] = useState(null);
   const [queue, setQueue] = useState([]);
+  const [isConnected, setIsConnected] = useState(true);
 
   useEffect(() => {
-    // Generate QR code
+    // Generate QR code for mobile booking
     const bookingUrl = `${window.location.origin}/book`;
-    QRCode.toDataURL(bookingUrl, { width: 300, margin: 2, color: { dark: '#000', light: '#FFF' } })
+    QRCode.toDataURL(bookingUrl, { width: 150, margin: 1, color: { dark: '#000', light: '#FFF' } })
       .then(url => setQrUrl(url))
       .catch(err => console.error(err));
 
@@ -28,13 +34,14 @@ const DisplayPage = () => {
     const fetchData = async () => {
       try {
         const data = await api.token.getDisplayStatus();
-        
         if (data.success) {
            setNowServing(data.nowServing || null);
            setQueue(data.queue || []);
+          setIsConnected(true);
         }
       } catch (err) {
         console.error("Display Fetch Error", err);
+        setIsConnected(false);
       }
     };
 
@@ -46,97 +53,73 @@ const DisplayPage = () => {
   // Audio / TTS Logic
   useEffect(() => {
     if (nowServing && nowServing.TokenGuid) {
-      // Check if it's a new token compared to the last one we announced
       const lastAnnounced = localStorage.getItem('last_announced_token');
       
       if (lastAnnounced !== nowServing.TokenGuid) {
-        // Play Sound / TTS
         const text = `Token Number ${nowServing.TokenNumber}, please proceed to ${nowServing.CounterName || 'Counter'}`;
-        
-        // Simple chime (optional, using browser oscillator if we wanted, but let's stick to TTS for now)
-        // Speak
-          if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            // slower speaking rate for clearer announcements
-            utterance.rate = 0.9;
-            utterance.pitch = 1.1;
-            window.speechSynthesis.cancel(); // Cancel current speaking
-            window.speechSynthesis.speak(utterance);
-          }
 
-        // Save to avoid repeating loop
+        if ('speechSynthesis' in window) {
+          // Basic browser speech synthesis
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 0.9;
+          utterance.pitch = 1.0;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utterance);
+        }
         localStorage.setItem('last_announced_token', nowServing.TokenGuid);
       }
     }
   }, [nowServing]);
 
   return (
-    <div className={styles.container}>
-      {/* ... header ... */}
-      <header className={styles.header}>
-        <div className={styles.logo}>Token System</div>
-        <div className={styles.time}>
-          {currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+    <div className="min-h-screen bg-black text-white overflow-hidden flex flex-col font-sans">
+      {/* Header */}
+      <header className="h-16 border-b border-zinc-800 flex items-center justify-between px-8 bg-zinc-900/50 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <img src={logo} alt="QMS" className="w-8 h-8 rounded-full object-contain" />
+          <h1 className="text-lg font-semibold tracking-wide text-zinc-300">QMS Display</h1>
+        </div>
+        <div className="flex items-center gap-4">
+          {!isConnected && <span className="text-red-500 text-xs uppercase font-bold animate-pulse">Offline</span>}
+          <div className="text-2xl font-mono font-medium tracking-widest text-zinc-400">
+            {currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+          </div>
         </div>
       </header>
-      
-      {/* Hidden button to enable audio context if needed by browser policy */}
-      <button 
-        style={{ position: 'fixed', opacity: 0, pointerEvents: 'none' }} 
-        id="audio-enabler"
-      >
-        Enable Audio
-      </button>
 
-      <main className={styles.main}>
-        {/* ... existing main content ... */}
-        <div className={styles.leftPanel}>
-          <div className={styles.qrCard}>
-            <h2>Scan to Book</h2>
-            <p>Use your mobile phone to get a ticket</p>
-            {qrUrl && <img src={qrUrl} alt="Scan to Book" className={styles.qrImage} />}
-          </div>
+      {/* Main Grid */}
+      <main className="flex-1 p-0 grid grid-cols-2 h-[calc(100vh-8rem)]">
+        {/* Left Panel: Now Serving (Big) */}
+        <div className="col-span-1 h-full border-r border-zinc-800 bg-black relative">
+          <NowServing token={nowServing} />
         </div>
 
-        <div className={styles.rightPanel}>
-          <div className={styles.statusCard}>
-            <h3>Now Serving</h3>
-            {nowServing ? (
-              <>
-                <div className={styles.tokenNumber} style={{ color: 'var(--color-success)' }}>
-                  {nowServing.TokenNumber}
-                </div>
-                <div className={styles.counter}>
-                   {nowServing.CounterName || 'Counter 1'}
-                </div>
-                <div className={styles.animPulse}></div> {/* Visual cue */}
-              </>
-            ) : (
-                <div className={styles.tokenNumber} style={{ fontSize: '3rem', color: '#ccc' }}>Waiting...</div>
-            )}
-          </div>
-          
-          <div className={styles.queueList}>
-            <h3>Next in Queue</h3>
-            {queue.length > 0 ? (
-                queue.slice(0, 4).map(t => (
-                    <div key={t.TokenGuid} className={styles.queueItem}>
-                        <span>#{t.TokenNumber}</span>
-                    </div>
-                ))
-            ) : (
-                <div style={{ padding: 20, textAlign: 'center', color: '#666' }}>Queue Empty</div>
-            )}
+        {/* Right Panel: Queue List */}
+        <div className="col-span-1 h-full bg-zinc-900 relative">
+          <QueueList queue={queue} />
+
+          {/* QR Code Fixed Bottom Right */}
+          <div className="absolute bottom-4 right-4 bg-white p-3 rounded-xl shadow-2xl flex items-center gap-4 z-20">
+            {qrUrl && <img src={qrUrl} alt="QR" className="w-20 h-20 mix-blend-multiply" />}
+            <div className="hidden xl:block pr-2">
+              <p className="text-zinc-900 font-bold text-sm">Scan to Join</p>
+              <p className="text-zinc-500 text-xs mt-0.5">Skip the line</p>
+            </div>
           </div>
         </div>
       </main>
-      
-      {/* ... footer ... */}
-      <footer className={styles.footer}>
-        <div className={styles.announcement}>
-           {nowServing ? `Calling Token ${nowServing.TokenNumber} to ${nowServing.CounterName}` : 'Please wait for your number to be called.'}
+
+      {/* Footer / Scrolling Ticker */}
+      <div className="bg-zinc-900 border-t border-zinc-800 flex flex-col">
+        <div className="h-10 bg-primary/20 text-primary-foreground flex items-center overflow-hidden whitespace-nowrap px-4 border-b border-white/5 relative">
+          <div className="text-sm font-medium animate-marquee inline-block w-full text-center text-white">
+            {nowServing
+              ? `Calling Token ${nowServing.TokenNumber} to ${nowServing.CounterName}... Please proceed immediately.`
+              : 'Welcome to QMS. Please wait for your number to be called.'}
+          </div>
         </div>
-      </footer>
+        <Footer className="bg-black text-white/50 py-2 border-t border-white/5" />
+      </div>
     </div>
   );
 };

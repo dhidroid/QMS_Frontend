@@ -6,6 +6,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(credentials),
     }),
+    getProfile: () => request('/auth/profile'),
+    updateProfile: (data) => request('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
   },
   token: {
     create: (data) => request('/token/create', {
@@ -14,11 +19,20 @@ export const api = {
     }),
     getByGuid: (guid) => request(`/token/by-guid/${guid}`),
     getDisplayStatus: () => request('/token/display-status'),
+    search: (term) => request('/token/search', {
+      method: 'POST',
+      body: JSON.stringify({ searchTerm: term }),
+    }),
   },
   admin: {
     getTokens: (params) => {
       const qs = params ? `?${new URLSearchParams(params).toString()}` : '';
       return request(`/admin/tokens${qs}`);
+    },
+    getAllTokens: () => request('/admin/all-tokens'),
+    getTickets: (params) => {
+      const query = new URLSearchParams(params).toString();
+      return request(`/admin/tickets?${query}`);
     },
     updateStatus: (data) => request('/handler/update-status', {
       method: 'POST',
@@ -45,4 +59,13 @@ export const api = {
     getDefault: () => request('/forms/default'),
     delete: (id) => request(`/forms/${id}`, { method: 'DELETE' })
   },
+  notification: {
+    subscribe: (subscription) => request('/notification/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ subscription }),
+    }),
+  },
+  analytics: {
+    get: (range) => request(`/analytics${range ? `?range=${range}` : ''}`),
+  }
 };

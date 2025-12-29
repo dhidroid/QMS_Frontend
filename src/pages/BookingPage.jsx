@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/endpoints';
-import styles from '../styles/BookingPage.module.css';
+import { Card, CardHeader, CardTitle, CardContent } from '../design-system/atoms/Card';
+import Button from '../design-system/atoms/Button';
+import { Smartphone, User, ArrowRight } from 'lucide-react';
+import clsx from 'clsx';
+import Footer from '../components/Footer';
 
 const BookingPage = () => {
   const navigate = useNavigate();
@@ -10,8 +14,8 @@ const BookingPage = () => {
     mobile: '',
     purpose: '',
   });
-  const [loading, setLoading] = useState(false); // Used for submission
-  const [checkingDefault, setCheckingDefault] = useState(true); // Initial load check
+  const [loading, setLoading] = useState(false);
+  const [checkingDefault, setCheckingDefault] = useState(true);
   const [error, setError] = useState('');
 
   // Check for default form
@@ -32,7 +36,14 @@ const BookingPage = () => {
   }, []);
 
   if (checkingDefault) {
-    return <div className={styles.container}><div className={styles.loader}>Loading...</div></div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-12 h-12 bg-primary/20 rounded-full mb-4"></div>
+          <div className="h-4 w-32 bg-slate-200 rounded"></div>
+        </div>
+      </div>
+    );
   }
 
   const handleChange = (e) => {
@@ -47,7 +58,7 @@ const BookingPage = () => {
     try {
       const res = await api.token.create(formData);
       if (res.success && res.token) {
-        navigate(`/ticket/${res.token.tokenGuid}`);
+        navigate(`/ticket/${res.token.tokenGuid}`, { state: { token: res.token } });
       } else {
         setError('Failed to create ticket. Please try again.');
       }
@@ -59,60 +70,79 @@ const BookingPage = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
-        <h1 className={styles.title}>Book Appointment</h1>
-        <p className={styles.subtitle}>Join the queue from your device</p>
-
-        {error && <div className={styles.error}>{error}</div>}
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="fullName">Full Name</label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-              required
-              placeholder="John Doe"
-            />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative">
+      <Card className="w-full max-w-md shadow-xl border-border/60 z-10">
+        <CardHeader className="text-center space-y-2 pb-8">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 mb-2">
+            <Smartphone size={24} />
           </div>
+          <CardTitle className="text-2xl font-bold tracking-tight">Book Appointment</CardTitle>
+          <p className="text-sm text-muted-foreground">Join the queue from your device</p>
+        </CardHeader>
 
-          <div className={styles.formGroup}>
-            <label htmlFor="mobile">Mobile Number</label>
-            <input
-              type="tel"
-              id="mobile"
-              name="mobile"
-              value={formData.mobile}
-              onChange={handleChange}
-              placeholder="+1 234 567 890"
-            />
-          </div>
+        <CardContent>
+          {error && (
+            <div className="mb-6 p-3 rounded-lg bg-rose-50 text-rose-600 text-sm border border-rose-100 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+              {error}
+            </div>
+          )}
 
-          <div className={styles.formGroup}>
-            <label htmlFor="purpose">Purpose</label>
-            <select
-              id="purpose"
-              name="purpose"
-              value={formData.purpose}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select Purpose</option>
-              <option value="General Inquiry">General Inquiry</option>
-              <option value="Consultation">Consultation</option>
-              <option value="Payment">Payment</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Full Name</label>
+              <input
+                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                name="fullName"
+                required
+                placeholder="John Doe"
+                value={formData.fullName}
+                onChange={handleChange}
+              />
+            </div>
 
-          <button type="submit" className={styles.submitBtn} disabled={loading}>
-            {loading ? 'Booking...' : 'Get Ticket'}
-          </button>
-        </form>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Mobile Number</label>
+              <input
+                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                name="mobile"
+                type="tel"
+                placeholder="+1 234 567 890"
+                value={formData.mobile}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Purpose</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                name="purpose"
+                required
+                value={formData.purpose}
+                onChange={handleChange}
+              >
+                <option value="">Select Purpose</option>
+                <option value="General Inquiry">General Inquiry</option>
+                <option value="Consultation">Consultation</option>
+                <option value="Payment">Payment</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <Button type="submit" className="w-full mt-6 h-12 text-base" disabled={loading}>
+              {loading ? 'Booking...' : 'Get Ticket'}
+              {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Background decoration */}
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
+
+      <div className="fixed bottom-0 w-full z-0 p-4">
+        <Footer className="bg-transparent border-t-0 opacity-60" />
       </div>
     </div>
   );
